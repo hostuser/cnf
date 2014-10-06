@@ -1,0 +1,141 @@
+* settings
+
+ - nautilus single click & size of folders/files display
+ - 
+
+* packages to install
+
+** general
+
+*** apt remove
+
+ - ubuntu-desktop
+ - ubuntu-session
+ - unity-control-center
+ - unity-control-center-signon
+ - unity-settings-daemon
+ - webaccounts-extension-common
+ - xul-ext-webaccounts
+ - indicator-bluetooth
+
+*** apt
+
+ - aptitude
+ - git
+ - emacs
+ - consolekit
+ - i3
+ - dunst
+ - unclutter
+ - autocutsel
+ - feh
+ - stow
+ - ubuntu-gnome-desktop
+ - gnome-control-center
+ - gnome-control-center-signon
+ - gnome-settings-daemon
+ - #openjdk-8-source openjdk-8-doc openjdk-8-jdk
+ - autojump
+ - fortune
+ - compton
+
+
+
+*** other
+
+ - oracle jdk:
+
+	 sudo add-apt-repository ppa:webupd8team/java
+	 sudo apt-get update
+	 sudo apt-get install oracle-java8-installer
+
+	 :optional, set default:
+	 sudo apt-get install oracle-java8-set-default
+
+ - google chrome
+	 
+	 wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
+	 sudo sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+	 sudo apt-get update 
+	 sudo apt-get install google-chrome-stable
+ 
+ - maven
+ - clojure 
+ - lein 
+
+ - noscript: 
+	   about:config: enable noscript.sync.enabled (import config/noscript.backup first in settings)
+ 
+ - keysnail:
+
+	   wget https://github.com/mooz/keysnail/raw/master/keysnail.xpi
+     firefox keysnail.xpi
+
+	   - change init file dir to /home/markus/config/keysnail
+	   - change plugin dir to /home/markus/config/keysnail/plugins
+
+ - percol
+   - python-pip
+
+ - rofi
+   - autoconf
+   - libxft-dev
+   - libxinerama-dev
+   - libpango1.0-dev
+
+ - intellij
+ - btsync
+ - gnome-settings-daemon
+ - isync
+ - dovecot-imapd
+
+
+** stow
+ - percol
+ - bash
+ - i3
+ - themes
+ - fonts
+ - bash
+ - calibre (maybe make sure no paths in there?)
+ - fonts
+ - themes
+
+** for i3 lockscreen
+ - imagemagick
+ - scrot
+ - consolekit
+
+
+** optional
+ - udiskie
+   
+* configuration links
+ 
+ - xkb
+ - git
+ - i3
+ - emacs
+ - keysnail
+
+
+# other:
+ - disable settings-daemon overwriting xkbconf: 
+	dconf write /org/gnome/settings-daemon/plugins/keyboard/active false
+    - then: gnome-control-center, Language support -> Keyboard input method system: none
+
+ - disable nautilus desktop:
+	gsettings set org.gnome.desktop.background show-desktop-icons false
+ - disable alt-mnemonics:
+ 	dconf write /org/gnome/desktop/interface/automatic-mnemonics false
+
+Fix 'diskwrites are not supported' on startup (lenovo x220):
+ - disable quick_boot in /etc/grub.d/10_linux
+
+Fix gdm multi-monitor issue (wrong location)
+ - configure in gnome, then copy ~/.config/monitors.xml to /var/lib/gdm/.config
+
+Enable sudo bash completion
+ - uncomment section in /etc/bash.bashrc
+
+
