@@ -4,6 +4,20 @@
 ;;; Code:
 
 ;;;; stuff to do before everything else
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(column-number-mode t)
+ '(custom-safe-themes (quote ("3a727bdc09a7a141e58925258b6e873c65ccf393b2240c51553098ca93957723" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" "756597b162f1be60a12dbd52bab71d40d6a2845a3e3c2584c6573ee9c332a66e" default))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
 (require 'package)
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
@@ -52,6 +66,8 @@
 (global-set-key (kbd "C-z") nil)
 (put 'suspend-frame 'disabled t)
 
+;; columns and line numbers
+(column-number-mode 1)
 
 ;; UTF-8
 (prefer-coding-system 'utf-8)
@@ -97,6 +113,14 @@
 
 ;;;; Package configuration
 
+;; smart-mode-line
+(use-package smart-mode-line
+	:ensure smart-mode-line
+	:init
+	(sml/setup)
+	(sml/apply-theme 'automatic)
+	)
+
 ;; expand-region
 (use-package expand-region
 	:ensure expand-region
@@ -136,9 +160,12 @@
   :init
   (progn
     (add-hook 'after-init-hook 'global-company-mode)
-    (setq company-idle-delay 0.1)
-		)
-	:config
+		(setq company-global-modes
+					'(not python-mode))
+		(setq company-minimum-prefix-length 2)
+		(setq company-idle-delay 0)
+		(setq company-show-numbers t))
+ 	:config
 	(progn
 	  ;; having to use M-p/M-n is annoying
 		(define-key company-active-map (kbd "C-p") 'company-select-previous) 
@@ -146,6 +173,23 @@
 		)
 	)
 
+;; we need auto-complete for some modes (jedi, mostly)
+(use-package auto-complete
+	:ensure auto-complete
+	:init
+	(progn
+		(define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
+		(define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)))
+
+;; jedi
+(use-package jedi
+	:ensure jedi
+	:init
+	(progn
+		(setq jedi:setup-keys t)
+		(autoload 'jedi:setup "jedi" nil t)
+		(add-hook 'python-mode-hook 'jedi:setup)
+		(setq jedi:complete-on-dot t)))
 
 ;; dired+
 (use-package dired+
@@ -235,19 +279,27 @@
 (defun my-helm ()
   (interactive)
   (helm-other-buffer
-   '(
-		 helm-source-projectile-buffers-list
-		 helm-c-source-buffers-list
-     helm-c-source-recentf
-		 helm-source-projectile-files-list
-		 helm-source-projectile-projects
-     helm-c-source-locate
-     helm-c-source-buffer-not-found
-     helm-c-source-file-name-history
-     helm-c-source-info-pages
-     )
-   helm-buffer ; " *my-helm*"
-   ))
+   (append
+
+		(if (projectile-project-p)
+				'(helm-source-projectile-buffers-list)
+			'())
+
+		'(helm-c-source-buffers-list
+			helm-c-source-recentf)
+
+		(if (projectile-project-p)
+				'(helm-source-projectile-files-list
+					helm-source-projectile-projects)
+			'())
+
+		'(helm-c-source-locate
+			helm-c-source-buffer-not-found
+			helm-c-source-file-name-history
+			helm-c-source-info-pages)
+		)
+	 helm-buffer ; " *my-helm*"
+	 ))
 
 (use-package helm
   :ensure helm
@@ -278,7 +330,7 @@
 		(global-set-key (kbd "M-x") 'helm-M-x)
 		)
   :bind 
-  ("C-\\" . my-helm)
+	("C-\\" . my-helm)
 	)
 
 ;; helm-swoop
@@ -345,10 +397,20 @@
 ;; (use-package anti-zenburn-theme
 ;;  	:ensure anti-zenburn-theme
 ;;  )
-(use-package noctilux-theme
-  :ensure noctilux-theme
+																				;(use-package noctilux-theme
+																				;  :ensure noctilux-theme
+																				;	)
+(use-package color-theme
+	:ensure color-theme)
+(use-package color-theme-solarized
+	:ensure color-theme-solarized
+	:init
+	(color-theme-solarized-light)
 	)
+;;(use-package leuven-theme
+;;	:ensure leuven-theme)
 
 (provide 'init)
 ;;; init.el ends here
+
 
