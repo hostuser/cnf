@@ -8,6 +8,9 @@
 #complete -o default -o nospace -F _git_branch gb
 #complete -o default -o nospace -F _git_checkout gco
 
+# functions
+
+
 # aliases 
 
 alias gs='git status '
@@ -36,9 +39,9 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] \
   && echo terminal || echo error)" "$(history|tail -n1| \
   sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-alias e='emacsclient -a "" -t '
+#alias e='emacsclient -a "" -t '
 alias zile='emacsclient -a "" -t '
-alias emacs='emacsclient -a "" -c --no-wait'
+#alias emacs='emacsclient -a "" -c --no-wait'
 
 alias bashrc='e $HOME/.bashrc'
 

@@ -10,7 +10,8 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(column-number-mode t)
- '(custom-safe-themes (quote ("3a727bdc09a7a141e58925258b6e873c65ccf393b2240c51553098ca93957723" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" "756597b162f1be60a12dbd52bab71d40d6a2845a3e3c2584c6573ee9c332a66e" default))))
+ '(custom-safe-themes (quote ("3a727bdc09a7a141e58925258b6e873c65ccf393b2240c51553098ca93957723" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" "756597b162f1be60a12dbd52bab71d40d6a2845a3e3c2584c6573ee9c332a66e" default)))
+ '(org-agenda-files (quote ("~/Documents/work/self-service/notes.org"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -22,6 +23,7 @@
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
 (package-initialize)
+(require 'ob-tangle)
 
 ;;;; check that a few select packages are always available, the others are installed by 'use-package' (https://github.com/jwiegley/use-package)
 
@@ -29,6 +31,8 @@
 (require 'cl)
 
 (add-to-list 'load-path "/home/markus/.emacs.d/lisp/use-package/")
+(add-to-list 'load-path "/home/markus/.emacs.d/lisp/i3-emacs/")
+
 (require 'use-package)
 (require 'bind-key)
 
@@ -59,20 +63,81 @@
 ;; use y/n instead of yes/no
 (fset 'yes-or-no-p 'y-or-n-p)
 
-;; never suspend 
+;; easier shortcut for 'maximizing' a window
+(global-set-key (kbd "C-q") 'delete-other-windows)
+
+;; never suspend
 (global-set-key "\C-x\C-z" nil)
 (global-set-key (kbd "C-x C-z") nil)
 (global-set-key "\C-z" nil)
 (global-set-key (kbd "C-z") nil)
+(global-set-key (kbd "C-.") 'repeat)
 (put 'suspend-frame 'disabled t)
 
 ;; columns and line numbers
 (column-number-mode 1)
 
+;; scrolling support for cursor
+(setq scroll-error-top-bottom t)
+
+;; always add final new-line
+(setq require-final-newline t)
+
+;; auto compress/uncompress comressed files
+(auto-compression-mode t)
+
+;; don't need no blinking cursor
+(blink-cursor-mode -1)
+
 ;; UTF-8
 (prefer-coding-system 'utf-8)
 (when (display-graphic-p)
   (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING)))
+
+;; enable system clipboard
+(setq x-select-enable-clipboard t)
+
+;; transient-mark-mode
+(transient-mark-mode t)
+
+;; world time zones I'm interested in (helm-world-time)
+(setq display-time-world-list '(("Europe/Berlin" "Munich")
+                                ("Australia/Melbourne" "Melbourne")
+                                ("Asia/Shanghai" "China")
+                                ))
+
+;; cleanup
+(defun untabify-buffer ()
+  (interactive)
+  (untabify (point-min) (point-max)))
+
+(defun indent-buffer ()
+  (interactive)
+  (indent-region (point-min) (point-max)))
+
+(defun cleanup-buffer ()
+  "Perform a bunch of operations on the whitespace content of a buffer."
+  (interactive)
+  (indent-buffer)
+  (untabify-buffer)
+  (delete-trailing-whitespace))
+
+(defun cleanup-region (beg end)
+  "Remove tmux artifacts from region."
+  (interactive "r")
+  (dolist (re '("\\\\│\·*\n" "\W*│\·*"))
+    (replace-regexp re "" nil beg end)))
+
+(global-set-key (kbd "C-x M-t") 'cleanup-region)
+(global-set-key (kbd "C-c n") 'cleanup-buffer)
+
+(setq-default show-trailing-whitespace t)
+
+
+;; nicer buffer names for duplicates
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'post-forward)
+(setq uniquify-separator ":")
 
 ;; use Ctrl-i to cycle windows
 (define-key input-decode-map (kbd "C-i") (kbd "H-i"))
@@ -106,52 +171,100 @@
 (add-to-list 'ispell-skip-region-alist '("[^\000-\377]+"))
 
 ;; show paren by default
-(show-paren-mode 1)
+;;(show-paren-mode 1) ;; we use smartparens for that now
 
 ;; rainbow-delimiters
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
 
 ;;;; Package configuration
 
+;; i3-emacs
+;;(require 'i3)
+;;(require 'i3-integration)
+;;(i3-one-window-per-frame-mode-on)
+;;(i3-advise-visible-frame-list-on)
+
+
 ;; smart-mode-line
 (use-package smart-mode-line
-	:ensure smart-mode-line
-	:init
-	(sml/setup)
-	(sml/apply-theme 'automatic)
-	)
+  :ensure smart-mode-line
+  :init
+  (sml/setup)
+  (sml/apply-theme 'automatic)
+  )
+
+;; winner-mode
+(use-package winner
+  :ensure winner
+  :init
+  (winner-mode 1))
+
 
 ;; expand-region
 (use-package expand-region
-	:ensure expand-region
-	:init
-	(global-set-key (kbd "C-=") 'er/expand-region)
-	)
+  :ensure expand-region
+  :init
+  (global-set-key (kbd "C-=") 'er/expand-region)
+  )
 
 (use-package change-inner
-	:ensure change-inner
-	:init
-	(global-set-key (kbd "M-i") 'change-inner)
-	(global-set-key (kbd "M-o") 'change-outer)
-	)
+  :ensure change-inner
+  :init
+  (global-set-key (kbd "M-i") 'change-inner)
+  (global-set-key (kbd "M-o") 'change-outer)
+  )
 
 ;; org-mode
 (use-package org
+  :ensure org
   :init
-  (setq org-startup-folded nil))
+  (progn
+    (global-set-key "\C-cl" 'org-store-link)
+    (global-set-key "\C-ca" 'org-agenda)
+    (global-set-key "\C-cb" 'org-iswitchb)
+    (setq setup-notes-file "~/config/setup_packages.org")
+    (setq org-directory "~/Documents/org")
+    (setq org-default-notes-file (concat org-directory "/notes.org"))
+    (setq org-capture-templates
+          '(("t" "Todo" entry (file+headline "~/Documents/org/todo.org" "Tasks")
+             "* TODO %?\n %i\n %a")
+            ("p" "Package details" entry (file setup-notes-file) "* %?")
+            ("l" "Link" plain (file (concat org-directory "/links.org"))
+             "- %?\n %x\n")
+            ))
+    (define-key global-map "\C-cc" 'org-capture)
+    (setq org-startup-folded nil)
+    (setq org-startup-indented t)
+
+    )
+  )
+
+(use-package org-plus-contrib
+  :ensure org-plus-contrib
+  :init
+  (require 'ox-taskjuggler)
+  )
+
+(use-package deft
+	:ensure deft
+	:init
+	(setq deft-extension "org")
+	(setq deft-text-mode 'org-mode)
+	(setq deft-directory "~/Documents/notes")
+	)
 
 ;; flycheck
 (use-package flycheck
-	:ensure flycheck
-	:init
-	(add-hook 'after-init-hook #'global-flycheck-mode)
-	)
+  :ensure flycheck
+  :init
+  (add-hook 'after-init-hook #'global-flycheck-mode)
+  )
 
 ;; gnus
-(setq gnus-select-method '(nntp "tweaknet" 
-																(nntp-address "news.tweaknews.eu")))
+(setq gnus-select-method '(nntp "tweaknet"
+                                (nntp-address "news.tweaknews.eu")))
 (setq gnus-secondary-select-methods '((nnimap "localhost"
-																							(nnimap-stream shell)))
+                                              (nnimap-stream shell)))
       nnimap-shell-program "/usr/lib/dovecot/imap")
 
 ;; company-mode
@@ -160,117 +273,131 @@
   :init
   (progn
     (add-hook 'after-init-hook 'global-company-mode)
-		(setq company-global-modes
-					'(not python-mode))
-		(setq company-minimum-prefix-length 2)
-		(setq company-idle-delay 0)
-		(setq company-show-numbers t))
- 	:config
-	(progn
-	  ;; having to use M-p/M-n is annoying
-		(define-key company-active-map (kbd "C-p") 'company-select-previous) 
-		(define-key company-active-map (kbd "C-n") 'company-select-next) 
-		)
-	)
+    (setq company-global-modes
+          '(not python-mode))
+    (setq company-minimum-prefix-length 2)
+    (setq company-idle-delay 0)
+    (setq company-show-numbers t))
+  :config
+  (progn
+    ;; having to use M-p/M-n is annoying
+    (define-key company-active-map (kbd "C-p") 'company-select-previous)
+    (define-key company-active-map (kbd "C-n") 'company-select-next)
+    )
+  )
 
 ;; we need auto-complete for some modes (jedi, mostly)
 (use-package auto-complete
-	:ensure auto-complete
-	:init
-	(progn
-		(define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
-		(define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)))
+  :ensure auto-complete
+  :init
+  (progn
+    (define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
+    (define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)))
 
 ;; jedi
 (use-package jedi
-	:ensure jedi
-	:init
-	(progn
-		(setq jedi:setup-keys t)
-		(autoload 'jedi:setup "jedi" nil t)
-		(add-hook 'python-mode-hook 'jedi:setup)
-		(setq jedi:complete-on-dot t)))
+  :ensure jedi
+  :init
+  (progn
+    (setq jedi:setup-keys t)
+    (autoload 'jedi:setup "jedi" nil t)
+    (add-hook 'python-mode-hook 'jedi:setup)
+    (setq jedi:complete-on-dot t)))
 
 ;; dired+
 (use-package dired+
-	:ensure dired+
-	:init
+  :ensure dired+
+  :init
   (progn
-		(toggle-diredp-find-file-reuse-dir t)
-		(add-hook 'dired-mode-hook
-							(lambda ()
-								(define-key dired-mode-map (kbd "^")
-									(lambda () (interactive) (find-alternate-file "..")))
-								))
-		)
-	)
+    (toggle-diredp-find-file-reuse-dir t)
+    (add-hook 'dired-mode-hook
+              (lambda ()
+                (define-key dired-mode-map (kbd "^")
+                  (lambda () (interactive) (find-alternate-file "..")))
+                ))
+    )
+  )
 
 (use-package dired-details
-	:ensure dired-details
-	)
+  :ensure dired-details
+  )
 
 (use-package dired-details+
-	:ensure dired-details+)
+  :ensure dired-details+)
 
 ;; clojure-mode
 (use-package clojure-mode
   :ensure clojure-mode
-	;;  :init
-	;;  (add-hook 'clojure-mode-hook 'paredit-mode)
-	)
+  ;;  :init
+  ;;  (add-hook 'clojure-mode-hook 'paredit-mode)
+  )
 
 ;; paredit
 ;;(use-package paredit
-;;	:ensure paredit
-;;	:config
-;;	(define-key paredit-mode-map (kbd "S-<return>") 'paredit-newline)
+;;  :ensure paredit
+;;  :config
+;;  (define-key paredit-mode-map (kbd "S-<return>") 'paredit-newline)
 ;;)
 
 ;; smartparens
-;; doc: https://github.com/Fuco1/smartparens/wiki
+;; doc: https://github.com/fuco1/smartparens/wiki
 (use-package smartparens
   :ensure smartparens
-  :init 
-  (smartparens-global-mode)
-	)
+  :init
+  (progn
+    (smartparens-global-mode)
+    (show-smartparens-global-mode 1)
+    (define-key sp-keymap (kbd "C-<right>") 'sp-forward-slurp-sexp)
+    (define-key sp-keymap (kbd "C-<left>") 'sp-forward-barf-sexp)
+    )
+  )
+
+;; god-mode
+(use-package god-mode
+  :ensure god-mode
+  :init
+  (progn
+    (global-set-key (kbd "<escape>") 'god-mode-all)
+    ))
 
 ;; rainbow-delimiters
 (use-package rainbow-delimiters
   :ensure rainbow-delimiters
   :init
   (require 'smartparens-config)
-	)
+  )
 
 ;; rainbow-mode
 (use-package rainbow-mode
   :ensure rainbow-mode
-	)
+  )
 
 ;; flyspell
 (eval-after-load "ispell"
   '(add-to-list 'ispell-local-dictionary-alist
                 '("deutsch8"
-									"[a-zA-ZäöüßÄÖÜ]" "[^a-zA-ZäöüßÄÖÜ]" "[']" t
+                  "[a-zA-ZäöüßÄÖÜ]" "[^a-zA-ZäöüßÄÖÜ]" "[']" t
                   ("-C" "-d" "de_DE-neu.multi")
                   "~latin1" iso-8859-1)))
 
 (defun fd-switch-dictionary()
-	(interactive)
-	(let* ((dic ispell-current-dictionary)
-				 (change (if (string= dic "deutsch8") "english" "deutsch8")))
-		(ispell-change-dictionary change)
-		(message "Dictionary switched from %s to %s" dic change)
-		))
+  (interactive)
+  (let* ((dic ispell-current-dictionary)
+         (change (if (string= dic "deutsch8") "english" "deutsch8")))
+    (ispell-change-dictionary change)
+    (message "Dictionary switched from %s to %s" dic change)
+    ))
 
 (use-package flyspell
-  :defer t
+  ;;  :defer t
   :config
-  (define-key flyspell-mode-map (kbd "M-n") 'flyspell-goto-next-error)
-  (define-key flyspell-mode-map (kbd "M-.") 'ispell-word)
-	(define-key flyspell-mode-map (kbd "<f8>") 'fd-switch-dictionary)
   :init
   (progn
     (setq-default ispell-program-name "aspell")
+    (define-key flyspell-mode-map (kbd "C-.") 'nil)
+    (define-key flyspell-mode-map (kbd "M-n") 'flyspell-goto-next-error)
+    (define-key flyspell-mode-map (kbd "M-.") 'ispell-word)
+    (define-key flyspell-mode-map (kbd "<f8>") 'fd-switch-dictionary)
     (add-hook 'markdown-mode-hook '(lambda () (flyspell-mode 1)))
     (add-hook 'text-mode-hook '(lambda () (flyspell-mode 1)))))
 
@@ -281,39 +408,39 @@
   (helm-other-buffer
    (append
 
-		(if (projectile-project-p)
-				'(helm-source-projectile-buffers-list)
-			'())
+    (if (projectile-project-p)
+        '(helm-source-projectile-buffers-list)
+      '())
 
-		'(helm-c-source-buffers-list
-			helm-c-source-recentf)
+    '(helm-c-source-buffers-list
+      helm-c-source-recentf)
 
-		(if (projectile-project-p)
-				'(helm-source-projectile-files-list
-					helm-source-projectile-projects)
-			'())
+    (if (projectile-project-p)
+        '(helm-source-projectile-files-list
+          helm-source-projectile-projects)
+      '())
 
-		'(helm-c-source-locate
-			helm-c-source-buffer-not-found
-			helm-c-source-file-name-history
-			helm-c-source-info-pages)
-		)
-	 helm-buffer ; " *my-helm*"
-	 ))
+    '(helm-c-source-locate
+      helm-c-source-buffer-not-found
+      helm-c-source-file-name-history
+      helm-c-source-info-pages)
+    )
+   helm-buffer ; " *my-helm*"
+   ))
 
 (use-package helm
   :ensure helm
   :init
-  (progn 
-    (require 'helm-config) 
-		(require 'helm-grep)
-		;; use C-c h instead of C-x c
-		(global-set-key (kbd "C-c h") 'helm-command-prefix)
-		(global-unset-key (kbd "C-x c"))
+  (progn
+    (require 'helm-config)
+    (require 'helm-grep)
+    ;; use C-c h instead of C-x c
+    (global-set-key (kbd "C-c h") 'helm-command-prefix)
+    (global-unset-key (kbd "C-x c"))
 
-		(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebihnd tab to do persistent action
-		(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
-		(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+    (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebihnd tab to do persistent action
+    (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+    (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
 
     (setq helm-candidate-number-limit 10)
     ;; From https://gist.github.com/antifuchs/9238468
@@ -321,17 +448,17 @@
           helm-input-idle-delay 0.01  ; this actually updates things
                                         ; reeeelatively quickly.
           helm-quick-update t ; do not display invisible candidates
-					helm-split-window-in-side-p t ; open helm buffer inside current window, not occupy whole other window
-					helm-buffers-fuzzy-matching t ; fuzzy matching buffer names when non--nil
-					helm-move-to-line-cycle-in-source nil ; move to end or beginning of source when reaching top or bottom of source.
+          helm-split-window-in-side-p t ; open helm buffer inside current window, not occupy whole other window
+          helm-buffers-fuzzy-matching t ; fuzzy matching buffer names when non--nil
+          helm-move-to-line-cycle-in-source nil ; move to end or beginning of source when reaching top or bottom of source.
           helm-M-x-requires-pattern nil
           helm-ff-skip-boring-files t)
     (helm-mode 1)
-		(global-set-key (kbd "M-x") 'helm-M-x)
-		)
-  :bind 
-	("C-\\" . my-helm)
-	)
+    (global-set-key (kbd "M-x") 'helm-M-x)
+    )
+  :bind
+  ("C-\\" . my-helm)
+  )
 
 ;; helm-swoop
 (use-package helm-swoop
@@ -340,15 +467,15 @@
 
 ;; projectile
 (use-package projectile
-	:ensure projectile
-	:init
-	(progn
-		(setq projectile-remember-window-configs t)
-		(projectile-global-mode)))
+  :ensure projectile
+  :init
+  (progn
+    (setq projectile-remember-window-configs t)
+    (projectile-global-mode)))
 
 (use-package helm-projectile
-	:ensure helm-projectile
-	)
+  :ensure helm-projectile
+  )
 
 ;; move between windows
 (use-package windmove
@@ -376,41 +503,39 @@
 
 ;; cider
 (use-package cider
-	:ensure cider
+  :ensure cider
   :config
   (progn
-	  (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
-		(add-to-list 'same-window-buffer-names "<em>nrepl</em>")
-		;; don't really need to navigate in that buffer
-		(define-key cider-repl-mode-map (kbd "C-p") 'cider-repl-previous-input) 
-		(define-key cider-repl-mode-map (kbd "C-n") 'cider-repl-next-input) 
-		)
-	)
+    (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
+    (add-to-list 'same-window-buffer-names "<em>nrepl</em>")
+    ;; don't really need to navigate in that buffer
+    (define-key cider-repl-mode-map (kbd "C-p") 'cider-repl-previous-input)
+    (define-key cider-repl-mode-map (kbd "C-n") 'cider-repl-next-input)
+    )
+  )
 
 ;;;; themes
 ;;(use-package gruvbox-theme
-;;	:ensure gruvbox-theme
+;;  :ensure gruvbox-theme
 ;;)
 ;;(use-package zenburn-theme
-;;	:ensure zenburn-theme
+;;  :ensure zenburn-theme
 ;;)
 ;; (use-package anti-zenburn-theme
-;;  	:ensure anti-zenburn-theme
+;;    :ensure anti-zenburn-theme
 ;;  )
-																				;(use-package noctilux-theme
-																				;  :ensure noctilux-theme
-																				;	)
+                                        ;(use-package noctilux-theme
+                                        ;  :ensure noctilux-theme
+                                        ; )
 (use-package color-theme
-	:ensure color-theme)
+  :ensure color-theme)
 (use-package color-theme-solarized
-	:ensure color-theme-solarized
-	:init
-	(color-theme-solarized-light)
-	)
+  :ensure color-theme-solarized
+  :init
+  (color-theme-solarized-dark)
+  )
 ;;(use-package leuven-theme
-;;	:ensure leuven-theme)
+;;  :ensure leuven-theme)
 
 (provide 'init)
 ;;; init.el ends here
-
-

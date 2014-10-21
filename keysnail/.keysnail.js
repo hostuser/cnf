@@ -5,6 +5,10 @@
 // ========================================================================= //
 //{{%PRESERVE%
 // Put your codes here
+plugins.options["kkk.sites"] = ["^https://([0-9a-zA-Z]+\\.)?github\\.com/",
+                                "^https://([0-9a-zA-Z]+\\.)?facebook\\.com/",
+                                "^https://([0-9a-zA-Z]+\\.)?google\\.([a-zA-Z]+)?",
+                                "^http://([0-9a-zA-Z]+\\.)?tumblr\\.com/"];
 //}}%PRESERVE%
 // ========================================================================= //
 
@@ -22,7 +26,6 @@ key.negativeArgument3Key = "M--";
 key.suspendKey           = "<f2>";
 
 // ================================= Hooks ================================= //
-
 
 hook.setHook('KeyBoardQuit', function (aEvent) {
     if (key.currentKeySequence.length) return;
@@ -149,6 +152,10 @@ key.setGlobalKey(['C-c', 'C-c', 'C-c'], function (ev) {
     command.clearConsole();
 }, 'Clear Javascript console', true);
 
+key.setGlobalKey(['C-c', 'C-h'], function (ev, arg) {                                                                                                                  
+  ext.exec("history-show", arg);                                                                                                                                          
+}, 'search history', true);
+
 key.setGlobalKey('C-f', function (ev) {
     getBrowser().mTabContainer.advanceSelectedTab(1, true);
 }, 'Select next tab');
@@ -157,6 +164,10 @@ key.setGlobalKey('C-b', function (ev) {
     getBrowser().mTabContainer.advanceSelectedTab(-1, true);
 }, 'Select previous tab');
 
+key.setGlobalKey([['C-\\'], ['C-i']], function (ev, arg) {
+  ext.exec("tanything", arg);
+}, 'view all tabs', true);
+
 key.setViewKey([['C-n'], ['j']], function (ev) {
     key.generateKey(ev.originalTarget, KeyEvent.DOM_VK_DOWN, true);
 }, 'Scroll line down');
@@ -164,7 +175,6 @@ key.setViewKey([['C-n'], ['j']], function (ev) {
 key.setViewKey([['C-p'], ['k']], function (ev) {
     key.generateKey(ev.originalTarget, KeyEvent.DOM_VK_UP, true);
 }, 'Scroll line up');
-
 
 key.setViewKey('.', function (ev) {
     key.generateKey(ev.originalTarget, KeyEvent.DOM_VK_RIGHT, true);
@@ -242,6 +252,10 @@ key.setViewKey(['C-c', 'C-e'], function (aEvent, aArg) {
     ext.exec("hok-start-continuous-mode", aArg);
 }, 'Start continuous HaH', true);
 
+key.setViewKey(['C-c', 'C-n'], function (ev) {
+                  ext.exec("noscript-show-popup");
+              }, 'NoScript - popup menu');
+
 key.setViewKey('c', function (aEvent, aArg) {
     ext.exec("hok-yank-foreground-mode", aArg);
 }, 'Hok - Foreground yank hint mode', true);
@@ -253,6 +267,10 @@ key.setViewKey('f', function (ev) {
 key.setViewKey('h', function (ev) {
     getBrowser().mTabContainer.advanceSelectedTab(-1, true);
 }, 'Select previous tab');
+
+key.setViewKey('N', function (ev) {
+                  ext.exec("noscript-selector");
+              }, 'NoScript - selector');
 
 key.setEditKey(['C-x', 'h'], function (ev) {
     command.selectAll(ev);
@@ -477,7 +495,6 @@ key.setCaretKey('.', function (ev) {
     util.getSelectionController().scrollHorizontal(false);
 }, 'Scroll right');
 
-
 key.setCaretKey('z', function (ev) {
     command.recenter(ev);
 }, 'Scroll to the cursor position');
@@ -514,31 +531,13 @@ key.setCaretKey('M-n', function (ev) {
     command.walkInputElement(command.elementsRetrieverButton, false, true);
 }, 'Focus to the previous button');
 
-plugins.options["kkk.sites"] = ["^https?://([0-9a-zA-Z]+\\.)+"];
-
-
-// ========================== tanything =======================================
-
-key.setGlobalKey([["C-\\"],["C-i"]], function (ev, arg) {
-  ext.exec("tanything", arg);
-}, "view all tabs", true);
-
-// ========================= noscript ====================================
-key.defineKey([key.modes.VIEW, key.modes.CARET],
-              'N',
-              function (ev) {
+key.setCaretKey('N', function (ev) {
                   ext.exec("noscript-selector");
               }, 'NoScript - selector');
 
-key.defineKey([key.modes.VIEW, key.modes.CARET],
-              ['C-c', 'C-n'],
-              function (ev) {
+key.setCaretKey(['C-c', 'C-n'], function (ev) {
                   ext.exec("noscript-show-popup");
               }, 'NoScript - popup menu');
 
-// ============================= history ===================================
-key.setGlobalKey(["C-c", "C-h"], function (ev, arg) {                                                                                                                  
-  ext.exec("history-show", arg);                                                                                                                                          
-}, "search history", true);                                                                                                                                           
 
-              
+

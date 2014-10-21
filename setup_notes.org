@@ -1,4 +1,4 @@
-* settings
+l* settings
 
  - nautilus single click & size of folders/files display
  - 
@@ -38,7 +38,11 @@
  - autojump
  - fortune
  - compton
-
+ - python-virtualenv
+ - texlive
+ - texlive-latex-extra
+ - texlive-xetex
+ - rxvt-unicode
 
 
 *** other
@@ -91,6 +95,7 @@
 
 
 ** stow
+ - leiningen
  - percol
  - bash
  - i3
@@ -100,6 +105,10 @@
  - calibre (maybe make sure no paths in there?)
  - fonts
  - themes
+ - globus
+ - git
+ - Xresources
+
 
 ** for i3 lockscreen
  - imagemagick
@@ -109,6 +118,8 @@
 
 ** optional
  - udiskie
+   - install python-setuptools libudisks2-dev python-gi-dev python-distutils-extra notify-osd
+   - sudo pip install udiskie
    
 * configuration links
  
@@ -138,4 +149,6 @@ Fix gdm multi-monitor issue (wrong location)
 Enable sudo bash completion
  - uncomment section in /etc/bash.bashrc
 
-
+   
+ fix disappearing mouse: dconf-editor, set 
+ org/gnome/settings-daemon/plugins/cursor/active to false
