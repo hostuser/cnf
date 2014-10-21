@@ -204,6 +204,7 @@ mode	 "focus" {
 
 bindsym	 $mod+space mode "focus"
 
+
 workspace "$ws1" output "$mainoutput"
 workspace "$ws2" output "$mainoutput"
 workspace "$ws3" output "$mainoutput"

@@ -1,0 +1,69 @@
+exit
+(doc +)
+(src +)
+(source +)
+exit
+pprint
+>pprint
+exit
+(.? "" :name)
+./>var
+./
+vinyasa.pull/pull
+iroh.core/>var
+clojure.repl/doc
+exit
+(doc +)
+exit
+(source +)
+(.> "1")
+.>
+(.? "" :name)
+(doc apropos)
+exit
+(apropos)
+(source apropos)
+(doc apropos)
+exit
+(clojure.repl/doc _)
+(clojure.repl/doc +)
+(./reimport
+exit
+.>
+refresh
+clojure.tools.namespace/refresh
+clojure.tools.namespace.repl
+quit
+refresh
+(take 20 (repeat #spy/p (+ 1 2 3)))
+(take 20 (repeat (+ 1 2 3)))
+(require 'spyscope.core)
+(take 20 (repeat #spy/p (+ 1 2 3)))
+#spy/d
+(take 20 (repeat #spy/d (+ 1 2 3)))
+#spy/d ^{:time "hh:mm:ss"} (+ 1 2 3)
+*data-readers*
+(require 'spyscope.core)
+*data-readers*
+#spy/d (println "hi")
+exit
+find-doc +
+find-doc src
+(find-doc +)
+(find-doc plus)
+(find-doc (plus))
+(find-doc 'plus)
+(find-doc "plus")
+spyscope.core/trace
+(take 20 (repeat spyscope.core/print-log (+ 1 2 3)))
+(pull 'hiccup)
+(>pull 'hiccup)
+(doc vinyasa.pull
+)
+(doc vinyasa.pull/pull)
+(./pull 'hiccup.core)
+(require 'hiccup.core)
+(pull 'hiccup)
+(./pull 'hiccup)
+(require 'hiccup.core)
+exit
