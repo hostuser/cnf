@@ -1,0 +1,11 @@
+- [C-;]: window management hydra
+- [C-']: avy char
+- [C-z]: avy word
+- [C-c w]: avy line
+- [C-i]: other buffer
+- [M-i]: imenu
+- [C-(]: iedit-mode
+- [C-s]: swiper
+- [C-r]: swiper
+- [C-c C-r]: ivy-resume
+- [M-[]: ace-window
