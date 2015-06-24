@@ -14,8 +14,8 @@
 
 (defhydra hydra-scroll ()
 	"scroll"
-	("j" (lambda () (interactive) (scroll-up-command 4)) "down")
-	("k" (lambda () (interactive) (scroll-down-command 4)) "up")
+	("j" (lambda () (interactive) (scroll-up 4)) "down")
+	("k" (lambda () (interactive) (scroll-down 4)) "up")
 	("g" beginning-of-buffer "beginning of buffer")
 	("G" end-of-buffer "end of buffer")
 	("n" next-line "next line")
@@ -24,8 +24,8 @@
 )
 
 (defhydra hydra-strings ()
-	"string manipulation"
-	("r" query-replace "query replace"))
+	"string manipulation and searching"
+	("r" query-replace "query-replace" ))
 
 (defun split-vertically-and-move ()
 		 "split window vertically and move cursor to newly created window"
@@ -131,7 +131,7 @@
 
 ;;(global-set-key (kbd "C-M-SPC") 'hydra-scroll/body)
 (global-unset-key (kbd "C-;"))
-(global-set-key (kbd "C-;") 'hydra-window/body)
+(global-set-key (kbd "C-'") 'hydra-window/body)
 (global-set-key (kbd "M-;") 'hydra-window/body)
 (global-set-key (kbd "C-c s") 'hydra-strings/body)
 ;;(global-set-key (kbd "M-g") 'hydra-errors-navigation)

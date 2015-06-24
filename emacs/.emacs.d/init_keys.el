@@ -21,7 +21,7 @@
 (global-set-key (kbd "M-i") 'imenu)
 
 ;; error navigation
-;;(global-set-key (kbd "M-n") 'next-error)
+(global-set-key (kbd "M-n") 'next-error)
 (global-set-key (kbd "M-p") 'previous-error)
 
 ;; search & replace

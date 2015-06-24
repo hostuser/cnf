@@ -28,6 +28,11 @@ alias pullr='git pull origin release'
 alias m='mvn -DskipTests=true clean install'
 alias h='history|grep '
 
+alias dc='docker-compose'
+#alias ranger='TERM=xterm-256color ranger'
+
+alias zile='/home/markus/local/bin/emacsclient-t'
+
 f_ikill() {
 		ps aux | percol | awk '{ print $2 }' | xargs kill 
 }
@@ -40,7 +45,7 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] \
   sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 #alias e='emacsclient -a "" -t '
-alias zile='emacsclient -a "" -t '
+#alias zile='emacsclient -a "" -t '
 #alias emacs='emacsclient -a "" -c --no-wait'
 
 alias bashrc='e $HOME/.bashrc'
@@ -52,8 +57,9 @@ export PATH=~/local/bin:/opt/gradle/bin/:/opt/maven/bin:$PATH
 #export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
 export JAVA_HOME=/usr/lib/jvm/java-8-oracle/
 
-#export EDITOR='/usr/bin/emacs -nw '
-export EDITOR='/usr/bin/emacsclient -a "" -t '
+export ALTERNATE_EDITOR=""
+export EDITOR="/home/markus/local/bin/emacsclient-t"                  # $EDITOR should open in terminal
+export VISUAL="/home/markus/local/bin/emacsclient-c"         # $VISUAL opens in GUI with non-daemon as alternate
 
 export IDEA_JDK=/usr/lib/jvm/java-8-oracle
 export STUDIO_JDK="$IDEA_JDK"

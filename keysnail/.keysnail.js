@@ -5,10 +5,12 @@
 // ========================================================================= //
 //{{%PRESERVE%
 // Put your codes here
-plugins.options["kkk.sites"] = ["^https://([0-9a-zA-Z]+\\.)?github\\.com/",
-                                "^https://([0-9a-zA-Z]+\\.)?facebook\\.com/",
-                                "^https://([0-9a-zA-Z]+\\.)?google\\.([a-zA-Z]+)?",
-                                "^http://([0-9a-zA-Z]+\\.)?tumblr\\.com/"];
+//plugins.options["kkk.sites"] = ["^https://([0-9a-zA-Z]+\\.)?github\\.com/",
+//                                "^https://([0-9a-zA-Z]+\\.)?facebook\\.com/",
+//                                "^https://([0-9a-zA-Z]+\\.)?google\\.([a-zA-Z]+)?",
+//                                "^http://([0-9a-zA-Z]+\\.)?tumblr\\.com/"];
+plugins.options["kkk.sites"] = ["^https://*+", "^http://*+"];
+
 //}}%PRESERVE%
 // ========================================================================= //
 
@@ -124,7 +126,7 @@ key.setGlobalKey(['C-x', 'C-f'], function (ev) {
     BrowserOpenFileWindow();
 }, 'Open the local file', true);
 
-key.setGlobalKey(['C-x', 'C-s'], function (ev) {
+key.setGlobalKey(['C-x'], function (ev) {
     saveDocument(window.content.document);
 }, 'Save current page to the file', true);
 

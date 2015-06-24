@@ -30,9 +30,9 @@ class i3_exit:
         self.status.set_label("Suspending, please standby...")
         os.system("i3lock")
         os.system("dbus-send --system --print-reply \
-                --dest=\"org.freedesktop.UPower\"   \
-                /org/freedesktop/UPower             \
-                org.freedesktop.UPower.Suspend")
+                --dest=\"org.freedesktop.login1\"   \
+                /org/freedesktop/login1             \
+                org.freedesktop.login1.Manager.Suspend boolean:true")
         gtk.main_quit()
 
     def reboot_action(self,btn):

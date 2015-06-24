@@ -3,539 +3,59 @@
 ;;; Markus' Emacs config file
 ;;; Code:
 
-;;;; stuff to do before everything else
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(column-number-mode t)
- '(custom-safe-themes (quote ("3a727bdc09a7a141e58925258b6e873c65ccf393b2240c51553098ca93957723" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" "756597b162f1be60a12dbd52bab71d40d6a2845a3e3c2584c6573ee9c332a66e" default)))
- '(org-agenda-files (quote ("~/Documents/work/self-service/notes.org"))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-
-(require 'package)
-(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
-(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
-(package-initialize)
-(require 'ob-tangle)
-
-;;;; check that a few select packages are always available, the others are installed by 'use-package' (https://github.com/jwiegley/use-package)
-
-;;;; having common lisp is always good, no?
-(require 'cl)
 
 (add-to-list 'load-path "/home/markus/.emacs.d/lisp/use-package/")
-(add-to-list 'load-path "/home/markus/.emacs.d/lisp/i3-emacs/")
+(add-to-list 'load-path "C:/Users/markus/.emacs.d/lisp/use-package/")
+
+(require 'package)
+
+(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
+(add-to-list 'package-archives '("elpy" . "http://jorgenschaefer.github.io/packages/") t)
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+(package-initialize)
+
+;; first time startup needs to init package list
+(when (not package-archive-contents) (package-refresh-contents))
+
+;; helper function to load external init code
+(defconst user-init-dir
+  (cond ((boundp 'user-emacs-directory)
+         user-emacs-directory)
+        ((boundp 'user-init-directory)
+         user-init-directory)
+        (t "~/.emacs.d/")))
+
+
+(defun load-user-file (file)
+  (interactive "f")
+  "Load a file in current user's configuration directory"
+  (load-file (expand-file-name file user-init-dir)))
+;;;; having common lisp is always good, no?
+(require 'cl)
 
 (require 'use-package)
 (require 'bind-key)
 
-;;;; General config
+;;;; customize changes
+(setq custom-file "~/.emacs.d/init_custom.el")
 
-;; personal details
-(setq user-full-name "Markus Binsteiner"
-      user-mail-address "m@ilmark.us")
+;;(load custom-file)
+;;;; load custom functions
+(load-user-file "init_functions.el")
 
-(desktop-save-mode 1)
+;;;; load general settings
+(load-user-file "init_general.el")
 
-;; exec-path: leiningen
-(add-to-list 'exec-path "/opt/lein")
+;;;; dired settings
+(load-user-file "init_dired.el")
 
-;; store backups in a common folder, do version control, don't delete anything
-(setq backup-directory-alist '(("." . "~/.backups/emacs")))
-(setq delete-old-versions -1)
-(setq version-control t)
-(setq vc-make-backup-files t)
-(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+;;;; packages
+(load-user-file "init_packages.el")
 
-;; disable graphical help and stuff when on X
-(tooltip-mode -1)
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-(scroll-bar-mode -1)
+;;;; load custom keybindings
+(load-user-file "init_keys.el")
 
-;; use y/n instead of yes/no
-(fset 'yes-or-no-p 'y-or-n-p)
 
-;; easier shortcut for 'maximizing' a window
-(global-set-key (kbd "C-q") 'delete-other-windows)
-
-;; never suspend
-(global-set-key "\C-x\C-z" nil)
-(global-set-key (kbd "C-x C-z") nil)
-(global-set-key "\C-z" nil)
-(global-set-key (kbd "C-z") nil)
-(global-set-key (kbd "C-.") 'repeat)
-(put 'suspend-frame 'disabled t)
-
-;; columns and line numbers
-(column-number-mode 1)
-
-;; scrolling support for cursor
-(setq scroll-error-top-bottom t)
-
-;; always add final new-line
-(setq require-final-newline t)
-
-;; auto compress/uncompress comressed files
-(auto-compression-mode t)
-
-;; don't need no blinking cursor
-(blink-cursor-mode -1)
-
-;; UTF-8
-(prefer-coding-system 'utf-8)
-(when (display-graphic-p)
-  (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING)))
-
-;; enable system clipboard
-(setq x-select-enable-clipboard t)
-
-;; transient-mark-mode
-(transient-mark-mode t)
-
-;; world time zones I'm interested in (helm-world-time)
-(setq display-time-world-list '(("Europe/Berlin" "Munich")
-                                ("Australia/Melbourne" "Melbourne")
-                                ("Asia/Shanghai" "China")
-                                ))
-
-;; cleanup
-(defun untabify-buffer ()
-  (interactive)
-  (untabify (point-min) (point-max)))
-
-(defun indent-buffer ()
-  (interactive)
-  (indent-region (point-min) (point-max)))
-
-(defun cleanup-buffer ()
-  "Perform a bunch of operations on the whitespace content of a buffer."
-  (interactive)
-  (indent-buffer)
-  (untabify-buffer)
-  (delete-trailing-whitespace))
-
-(defun cleanup-region (beg end)
-  "Remove tmux artifacts from region."
-  (interactive "r")
-  (dolist (re '("\\\\│\·*\n" "\W*│\·*"))
-    (replace-regexp re "" nil beg end)))
-
-(global-set-key (kbd "C-x M-t") 'cleanup-region)
-(global-set-key (kbd "C-c n") 'cleanup-buffer)
-
-(setq-default show-trailing-whitespace t)
-
-
-;; nicer buffer names for duplicates
-(require 'uniquify)
-(setq uniquify-buffer-name-style 'post-forward)
-(setq uniquify-separator ":")
-
-;; use Ctrl-i to cycle windows
-(define-key input-decode-map (kbd "C-i") (kbd "H-i"))
-(global-set-key (kbd "H-i") 'other-window)
-
-
-;; In-/decrease text size
-(bind-key "C-+" 'text-scale-increase)
-(bind-key "C--" 'text-scale-decrease)
-
-;; tab-width
-(setq-default tab-width 2)
-
-;; dired
-(use-package dired)
-(setq dired-recursive-deletes 'always)
-(setq dired-recursive-copies 'always)
-;; use target in other buffer, if available
-(setq dired-dwim-target t)
-(setq delete-by-moving-to-trash t
-      trash-directory "~/.Trash/emacs")
-(setq dired-listing-switches "--group-directories-first -alh")
-;; show symlinks
-(setq dired-details-hide-link-targets nil)
-(setq-default dired-omit-mode t)
-(define-key dired-mode-map (kbd "C-x o") 'dired-omit-mode)
-
-;; spelling(setq-default ispell-program-name "aspell")
-(setq ispell-personal-dictionary "~/config/flydict/dict"
-      ispell-extra-args '("--sug-mode=ultra" "--ignore=3"))
-(add-to-list 'ispell-skip-region-alist '("[^\000-\377]+"))
-
-;; show paren by default
-;;(show-paren-mode 1) ;; we use smartparens for that now
-
-;; rainbow-delimiters
-(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
-
-;;;; Package configuration
-
-;; i3-emacs
-;;(require 'i3)
-;;(require 'i3-integration)
-;;(i3-one-window-per-frame-mode-on)
-;;(i3-advise-visible-frame-list-on)
-
-
-;; smart-mode-line
-(use-package smart-mode-line
-  :ensure smart-mode-line
-  :init
-  (sml/setup)
-  (sml/apply-theme 'automatic)
-  )
-
-;; winner-mode
-(use-package winner
-  :ensure winner
-  :init
-  (winner-mode 1))
-
-
-;; expand-region
-(use-package expand-region
-  :ensure expand-region
-  :init
-  (global-set-key (kbd "C-=") 'er/expand-region)
-  )
-
-(use-package change-inner
-  :ensure change-inner
-  :init
-  (global-set-key (kbd "M-i") 'change-inner)
-  (global-set-key (kbd "M-o") 'change-outer)
-  )
-
-;; org-mode
-(use-package org
-  :ensure org
-  :init
-  (progn
-    (global-set-key "\C-cl" 'org-store-link)
-    (global-set-key "\C-ca" 'org-agenda)
-    (global-set-key "\C-cb" 'org-iswitchb)
-    (setq setup-notes-file "~/config/setup_packages.org")
-    (setq org-directory "~/Documents/org")
-    (setq org-default-notes-file (concat org-directory "/notes.org"))
-    (setq org-capture-templates
-          '(("t" "Todo" entry (file+headline "~/Documents/org/todo.org" "Tasks")
-             "* TODO %?\n %i\n %a")
-            ("p" "Package details" entry (file setup-notes-file) "* %?")
-            ("l" "Link" plain (file (concat org-directory "/links.org"))
-             "- %?\n %x\n")
-            ))
-    (define-key global-map "\C-cc" 'org-capture)
-    (setq org-startup-folded nil)
-    (setq org-startup-indented t)
-
-    )
-  )
-
-(use-package org-plus-contrib
-  :ensure org-plus-contrib
-  :init
-  (require 'ox-taskjuggler)
-  )
-
-(use-package deft
-	:ensure deft
-	:init
-	(setq deft-extension "org")
-	(setq deft-text-mode 'org-mode)
-	(setq deft-directory "~/Documents/notes")
-	)
-
-;; flycheck
-(use-package flycheck
-  :ensure flycheck
-  :init
-  (add-hook 'after-init-hook #'global-flycheck-mode)
-  )
-
-;; gnus
-(setq gnus-select-method '(nntp "tweaknet"
-                                (nntp-address "news.tweaknews.eu")))
-(setq gnus-secondary-select-methods '((nnimap "localhost"
-                                              (nnimap-stream shell)))
-      nnimap-shell-program "/usr/lib/dovecot/imap")
-
-;; company-mode
-(use-package company
-  :ensure company
-  :init
-  (progn
-    (add-hook 'after-init-hook 'global-company-mode)
-    (setq company-global-modes
-          '(not python-mode))
-    (setq company-minimum-prefix-length 2)
-    (setq company-idle-delay 0)
-    (setq company-show-numbers t))
-  :config
-  (progn
-    ;; having to use M-p/M-n is annoying
-    (define-key company-active-map (kbd "C-p") 'company-select-previous)
-    (define-key company-active-map (kbd "C-n") 'company-select-next)
-    )
-  )
-
-;; we need auto-complete for some modes (jedi, mostly)
-(use-package auto-complete
-  :ensure auto-complete
-  :init
-  (progn
-    (define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
-    (define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)))
-
-;; jedi
-(use-package jedi
-  :ensure jedi
-  :init
-  (progn
-    (setq jedi:setup-keys t)
-    (autoload 'jedi:setup "jedi" nil t)
-    (add-hook 'python-mode-hook 'jedi:setup)
-    (setq jedi:complete-on-dot t)))
-
-;; dired+
-(use-package dired+
-  :ensure dired+
-  :init
-  (progn
-    (toggle-diredp-find-file-reuse-dir t)
-    (add-hook 'dired-mode-hook
-              (lambda ()
-                (define-key dired-mode-map (kbd "^")
-                  (lambda () (interactive) (find-alternate-file "..")))
-                ))
-    )
-  )
-
-(use-package dired-details
-  :ensure dired-details
-  )
-
-(use-package dired-details+
-  :ensure dired-details+)
-
-;; clojure-mode
-(use-package clojure-mode
-  :ensure clojure-mode
-  ;;  :init
-  ;;  (add-hook 'clojure-mode-hook 'paredit-mode)
-  )
-
-;; paredit
-;;(use-package paredit
-;;  :ensure paredit
-;;  :config
-;;  (define-key paredit-mode-map (kbd "S-<return>") 'paredit-newline)
-;;)
-
-;; smartparens
-;; doc: https://github.com/fuco1/smartparens/wiki
-(use-package smartparens
-  :ensure smartparens
-  :init
-  (progn
-    (smartparens-global-mode)
-    (show-smartparens-global-mode 1)
-    (define-key sp-keymap (kbd "C-<right>") 'sp-forward-slurp-sexp)
-    (define-key sp-keymap (kbd "C-<left>") 'sp-forward-barf-sexp)
-    )
-  )
-
-;; god-mode
-(use-package god-mode
-  :ensure god-mode
-  :init
-  (progn
-    (global-set-key (kbd "<escape>") 'god-mode-all)
-    ))
-
-;; rainbow-delimiters
-(use-package rainbow-delimiters
-  :ensure rainbow-delimiters
-  :init
-  (require 'smartparens-config)
-  )
-
-;; rainbow-mode
-(use-package rainbow-mode
-  :ensure rainbow-mode
-  )
-
-;; flyspell
-(eval-after-load "ispell"
-  '(add-to-list 'ispell-local-dictionary-alist
-                '("deutsch8"
-                  "[a-zA-ZäöüßÄÖÜ]" "[^a-zA-ZäöüßÄÖÜ]" "[']" t
-                  ("-C" "-d" "de_DE-neu.multi")
-                  "~latin1" iso-8859-1)))
-
-(defun fd-switch-dictionary()
-  (interactive)
-  (let* ((dic ispell-current-dictionary)
-         (change (if (string= dic "deutsch8") "english" "deutsch8")))
-    (ispell-change-dictionary change)
-    (message "Dictionary switched from %s to %s" dic change)
-    ))
-
-(use-package flyspell
-  ;;  :defer t
-  :config
-  :init
-  (progn
-    (setq-default ispell-program-name "aspell")
-    (define-key flyspell-mode-map (kbd "C-.") 'nil)
-    (define-key flyspell-mode-map (kbd "M-n") 'flyspell-goto-next-error)
-    (define-key flyspell-mode-map (kbd "M-.") 'ispell-word)
-    (define-key flyspell-mode-map (kbd "<f8>") 'fd-switch-dictionary)
-    (add-hook 'markdown-mode-hook '(lambda () (flyspell-mode 1)))
-    (add-hook 'text-mode-hook '(lambda () (flyspell-mode 1)))))
-
-
-;; helm
-(defun my-helm ()
-  (interactive)
-  (helm-other-buffer
-   (append
-
-    (if (projectile-project-p)
-        '(helm-source-projectile-buffers-list)
-      '())
-
-    '(helm-c-source-buffers-list
-      helm-c-source-recentf)
-
-    (if (projectile-project-p)
-        '(helm-source-projectile-files-list
-          helm-source-projectile-projects)
-      '())
-
-    '(helm-c-source-locate
-      helm-c-source-buffer-not-found
-      helm-c-source-file-name-history
-      helm-c-source-info-pages)
-    )
-   helm-buffer ; " *my-helm*"
-   ))
-
-(use-package helm
-  :ensure helm
-  :init
-  (progn
-    (require 'helm-config)
-    (require 'helm-grep)
-    ;; use C-c h instead of C-x c
-    (global-set-key (kbd "C-c h") 'helm-command-prefix)
-    (global-unset-key (kbd "C-x c"))
-
-    (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebihnd tab to do persistent action
-    (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
-    (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
-
-    (setq helm-candidate-number-limit 10)
-    ;; From https://gist.github.com/antifuchs/9238468
-    (setq helm-idle-delay 0.0 ; update fast sources immediately (doesn't).
-          helm-input-idle-delay 0.01  ; this actually updates things
-                                        ; reeeelatively quickly.
-          helm-quick-update t ; do not display invisible candidates
-          helm-split-window-in-side-p t ; open helm buffer inside current window, not occupy whole other window
-          helm-buffers-fuzzy-matching t ; fuzzy matching buffer names when non--nil
-          helm-move-to-line-cycle-in-source nil ; move to end or beginning of source when reaching top or bottom of source.
-          helm-M-x-requires-pattern nil
-          helm-ff-skip-boring-files t)
-    (helm-mode 1)
-    (global-set-key (kbd "M-x") 'helm-M-x)
-    )
-  :bind
-  ("C-\\" . my-helm)
-  )
-
-;; helm-swoop
-(use-package helm-swoop
-  :ensure helm-swoop
-  :bind (("C-s" . helm-swoop)))
-
-;; projectile
-(use-package projectile
-  :ensure projectile
-  :init
-  (progn
-    (setq projectile-remember-window-configs t)
-    (projectile-global-mode)))
-
-(use-package helm-projectile
-  :ensure helm-projectile
-  )
-
-;; move between windows
-(use-package windmove
-  :bind
-  (("<f2> l" . windmove-right)
-   ("<f2> h" . windmove-left)
-   ("<f2> k" . windmove-up)
-   ("<f2> j" . windmove-down)))
-
-;; undo-tree
-(use-package undo-tree
-  :ensure undo-tree
-  :init
-  (progn
-    (global-undo-tree-mode)
-    (setq undo-tree-visualizer-timestamps t)
-    (setq undo-tree-visualizer-diff t)))
-
-;; guide-key
-(use-package guide-key
-  :ensure guide-key
-  :init
-  (setq guide-key/guide-key-sequence '("C-x r" "C-x 4" "C-c"))
-  (guide-key-mode 1))  ; Enable guide-key-mode
-
-;; cider
-(use-package cider
-  :ensure cider
-  :config
-  (progn
-    (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
-    (add-to-list 'same-window-buffer-names "<em>nrepl</em>")
-    ;; don't really need to navigate in that buffer
-    (define-key cider-repl-mode-map (kbd "C-p") 'cider-repl-previous-input)
-    (define-key cider-repl-mode-map (kbd "C-n") 'cider-repl-next-input)
-    )
-  )
-
-;;;; themes
-;;(use-package gruvbox-theme
-;;  :ensure gruvbox-theme
-;;)
-;;(use-package zenburn-theme
-;;  :ensure zenburn-theme
-;;)
-;; (use-package anti-zenburn-theme
-;;    :ensure anti-zenburn-theme
-;;  )
-                                        ;(use-package noctilux-theme
-                                        ;  :ensure noctilux-theme
-                                        ; )
-(use-package color-theme
-  :ensure color-theme)
-(use-package color-theme-solarized
-  :ensure color-theme-solarized
-  :init
-  (color-theme-solarized-dark)
-  )
-;;(use-package leuven-theme
-;;  :ensure leuven-theme)
 
 (provide 'init)
 ;;; init.el ends here

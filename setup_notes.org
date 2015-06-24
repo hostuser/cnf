@@ -1,4 +1,4 @@
-l* settings
+* settings
 
  - nautilus single click & size of folders/files display
  - 
@@ -120,6 +120,10 @@ l* settings
  - udiskie
    - install python-setuptools libudisks2-dev python-gi-dev python-distutils-extra notify-osd
    - sudo pip install udiskie
+
+* pip install pyflakes
+* pip install rope
+* pip install flake8
    
 * configuration links
  
@@ -152,3 +156,6 @@ Enable sudo bash completion
    
  fix disappearing mouse: dconf-editor, set 
  org/gnome/settings-daemon/plugins/cursor/active to false
+
+
+

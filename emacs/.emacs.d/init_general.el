@@ -62,6 +62,9 @@
 ;; transient-mark-mode
 (transient-mark-mode t)
 
+;; line numbers
+(add-hook 'prog-mode-hook 'linum-mode)
+
 ;; winner-mode
 (winner-mode t)
 
